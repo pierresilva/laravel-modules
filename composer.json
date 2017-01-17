@@ -1,0 +1,28 @@
+{
+    "name": "pierresilva/modules",
+    "description": "Laravel 5.3 Modules",
+    "keywords": ["modules", "laravel", "pierresilva"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Pierre SIlva",
+            "email": "pierre.silva@lab3studio.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.4",
+        "illuminate/database": "5.3.*",
+        "illuminate/support": "5.3.*",
+        "illuminate/filesystem": "5.3.*",
+        "illuminate/config": "5.3.*",
+        "illuminate/routing": "5.3.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "pierresilva\\Modules\\": "src/"
+        }
+    },
+    "suggest": {
+        "wikimedia/composer-merge-plugin": "Allows the ability to create and merge composer.json files for your individual modules for module-specific dependency management."
+    }
+}
