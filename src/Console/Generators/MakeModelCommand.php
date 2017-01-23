@@ -1,8 +1,8 @@
 <?php
 
-namespace Caffeinated\Modules\Console\Generators;
+namespace pierresilva\Modules\Console\Generators;
 
-use Caffeinated\Modules\Console\GeneratorCommand;
+use pierresilva\Modules\Console\GeneratorCommand;
 use Illuminate\Support\Str;
 
 class MakeModelCommand extends GeneratorCommand

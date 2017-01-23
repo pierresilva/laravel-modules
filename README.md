@@ -7,7 +7,7 @@ The package follows the FIG standards PSR-1, PSR-2, and PSR-4 to ensure a high l
 
 Documentation
 -------------
-You will find user friendly and updated documentation in the wiki here: [pierresilva Modules Wiki](https://github.com/pierresilva/modules/wiki)
+You will find user friendly and updated documentation in the wiki here: [pierresilva Modules Wiki](https://github.com/pierresilva/laravel-modules/wiki)
 
 Quick Installation
 ------------------

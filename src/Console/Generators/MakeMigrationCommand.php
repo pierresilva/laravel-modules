@@ -1,6 +1,6 @@
 <?php
 
-namespace Caffeinated\Modules\Console\Generators;
+namespace pierresilva\Modules\Console\Generators;
 
 use Illuminate\Console\Command;
 
