@@ -386,11 +386,13 @@ php artisan module:list
 ```
 #### module:migrate [slug]
 Migrate the migrations from the specified module or from all modules.
-**Migrate all modules.**
+
+Migrate all modules.
 ```
 php artisan module:migrate
 ```
-**Migrate specific module.**
+
+Migrate specific module.
 ```
 php artisan module:migrate blog --pretend
 ```
