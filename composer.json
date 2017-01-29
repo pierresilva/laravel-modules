@@ -1,5 +1,5 @@
 {
-    "name": "pierresilva/modules",
+    "name": "pierresilva/laravel-modules",
     "description": "Laravel 5.3 Modules",
     "keywords": ["modules", "laravel", "pierresilva"],
     "license": "MIT",
