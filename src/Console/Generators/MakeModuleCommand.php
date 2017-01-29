@@ -23,7 +23,7 @@ class MakeModuleCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Create a new Caffeinated module and bootstrap it';
+    protected $description = 'Create a new module and bootstrap it';
 
     /**
      * The modules instance.
