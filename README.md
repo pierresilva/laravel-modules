@@ -36,19 +36,23 @@ laravel-project/
         |-- Blog/
             |-- Console/
             |-- Database/
+                |-- Factories/
                 |-- Migrations/
                 |-- Seeds/
             |-- Http/
                 |-- Controllers/
                 |-- Middleware/
                 |-- Requests/
-                |-- routes.php
+            |-- Models/
             |-- Providers/
-                |-- BlogServiceProvider.php
+                |-- ModuleServiceProvider.php
                 |-- RouteServiceProvider.php
             |-- Resources/
                 |-- Lang/
                 |-- Views/
+            |-- Routes/
+                |-- api.php/
+                |-- web.php/
             |-- module.json
 ```
 
@@ -84,7 +88,7 @@ Configuration
 To publish the bundled config file, simply run Laravel's vendor:publish Artisan command:
 
 ```
-php artisan vendor:publish --provider="pierresilva\Modules\ModuleServiceProvider" --tag=config
+php artisan vendor:publish
 ```
 
 #### Path to Modules
