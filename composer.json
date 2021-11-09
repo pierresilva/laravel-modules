@@ -10,9 +10,7 @@
         }
     ],
     "require": {
-        "php": "^7.2.5|^8.0"
-    },
-    "replace": {
+        "php": "^7.2.5|^8.0",
         "illuminate/database": "^v7.30.0",
         "illuminate/support": "^v7.30.0",
         "illuminate/filesystem": "^v7.30.0",
