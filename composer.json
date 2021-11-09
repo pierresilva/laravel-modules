@@ -1,21 +1,21 @@
 {
     "name": "pierresilva/laravel-modules",
-    "description": "Laravel 5.3 Modules",
+    "description": "Laravel 8 Modules",
     "keywords": ["modules", "laravel", "pierresilva"],
     "license": "MIT",
     "authors": [
         {
             "name": "Pierre SIlva",
-            "email": "pierre.silva@lab3studio.com"
+            "email": "info@appscenter.dev"
         }
     ],
     "require": {
-        "php": ">=5.6.4",
-        "illuminate/database": "5.3.*",
-        "illuminate/support": "5.3.*",
-        "illuminate/filesystem": "5.3.*",
-        "illuminate/config": "5.3.*",
-        "illuminate/routing": "5.3.*"
+        "php": ">=7.2.*",
+        "illuminate/database": "self.version",
+        "illuminate/support": "self.version",
+        "illuminate/filesystem": "self.version",
+        "illuminate/config": "self.version",
+        "illuminate/routing": "self.version"
     },
     "autoload": {
         "psr-4": {
