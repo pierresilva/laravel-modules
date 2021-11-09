@@ -11,9 +11,10 @@ class MakeProviderCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'make:module:provider
+    protected $signature = 'module:make:provider
     	{slug : The slug of the module.}
-    	{name : The name of the service provider class.}';
+    	{name : The name of the service provider class.}
+    	{--location= : The modules location to create the module provider class in}';
 
     /**
      * The console command description.
@@ -48,6 +49,6 @@ class MakeProviderCommand extends GeneratorCommand
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return module_class($this->argument('slug'), 'Providers');
+        return module_class($this->argument('slug'), 'Providers', $this->option('location'));
     }
 }

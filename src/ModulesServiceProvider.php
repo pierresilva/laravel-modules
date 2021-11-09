@@ -2,13 +2,11 @@
 
 namespace pierresilva\Modules;
 
+use Illuminate\Support\ServiceProvider;
 use pierresilva\Modules\Contracts\Repository;
 use pierresilva\Modules\Providers\BladeServiceProvider;
 use pierresilva\Modules\Providers\ConsoleServiceProvider;
 use pierresilva\Modules\Providers\GeneratorServiceProvider;
-use pierresilva\Modules\Providers\HelperServiceProvider;
-use pierresilva\Modules\Providers\RepositoryServiceProvider;
-use Illuminate\Support\ServiceProvider;
 
 class ModulesServiceProvider extends ServiceProvider
 {
@@ -18,7 +16,7 @@ class ModulesServiceProvider extends ServiceProvider
     protected $defer = false;
 
     /**
-     * Boot the service provider.
+     * Bootstrap the provided services.
      */
     public function boot()
     {
@@ -30,7 +28,7 @@ class ModulesServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register the service provider.
+     * Register the provided services.
      */
     public function register()
     {
@@ -40,37 +38,39 @@ class ModulesServiceProvider extends ServiceProvider
 
         $this->app->register(ConsoleServiceProvider::class);
         $this->app->register(GeneratorServiceProvider::class);
-        $this->app->register(HelperServiceProvider::class);
-        $this->app->register(RepositoryServiceProvider::class);
         $this->app->register(BladeServiceProvider::class);
 
         $this->app->singleton('modules', function ($app) {
-            $repository = $app->make(Repository::class);
-
-            return new Modules($app, $repository);
+            return new RepositoryManager($app);
         });
     }
 
     /**
-     * Get the services provided by the provider.
+     * Get the services provided by the package.
      *
-     * @return string
+     * @return array
      */
     public function provides()
     {
         return ['modules'];
     }
 
+    /**
+     * Register compilable code.
+     *
+     * @return array
+     */
     public static function compiles()
     {
-        $modules = app()->make('modules')->all();
         $files = [];
 
-        foreach ($modules as $module) {
-            $serviceProvider = module_class($module['slug'], 'Providers\\ModuleServiceProvider');
+        foreach (modules()->repositories() as $repository) {
+            foreach ($repository->all() as $module) {
+                $serviceProvider = module_class($module['slug'], 'Providers\\ModuleServiceProvider', $repository->location);
 
-            if (class_exists($serviceProvider)) {
-                $files = array_merge($files, forward_static_call([$serviceProvider, 'compiles']));
+                if (class_exists($serviceProvider)) {
+                    $files = array_merge($files, forward_static_call([$serviceProvider, 'compiles']));
+                }
             }
         }
 

@@ -2,13 +2,14 @@
 
 namespace pierresilva\Modules\Console\Commands;
 
-use pierresilva\Modules\Modules;
+use Illuminate\Support\Arr;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
+use pierresilva\Modules\RepositoryManager;
 use Illuminate\Database\Migrations\Migrator;
-use Illuminate\Support\Arr;
-use Symfony\Component\Console\Input\InputArgument;
+use pierresilva\Modules\Repositories\Repository;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputArgument;
 
 class ModuleMigrateCommand extends Command
 {
@@ -29,7 +30,7 @@ class ModuleMigrateCommand extends Command
     protected $description = 'Run the database migrations for a specific or all modules';
 
     /**
-     * @var Modules
+     * @var RepositoryManager
      */
     protected $module;
 
@@ -42,9 +43,9 @@ class ModuleMigrateCommand extends Command
      * Create a new command instance.
      *
      * @param Migrator $migrator
-     * @param Modules  $module
+     * @param RepositoryManager  $module
      */
-    public function __construct(Migrator $migrator, Modules $module)
+    public function __construct(Migrator $migrator, RepositoryManager $module)
     {
         parent::__construct();
 
@@ -57,29 +58,38 @@ class ModuleMigrateCommand extends Command
      *
      * @return mixed
      */
-    public function fire()
+    public function handle()
     {
         $this->prepareDatabase();
 
-        if (!empty($this->argument('slug'))) {
-            $module = $this->module->where('slug', $this->argument('slug'));
+        $repository = modules()->location($this->option('location'));
 
-            if ($this->module->isEnabled($module['slug'])) {
-                return $this->migrate($module['slug']);
+        $this->migrate($repository);
+    }
+
+    /**
+     * @param \pierresilva\Modules\Repositories\Repository $repository
+     * @return mixed|void
+     */
+    protected function migrate(Repository $repository)
+    {
+        if (! empty($this->argument('slug'))) {
+            $module = $repository->where('slug', $this->argument('slug'));
+
+            if ($repository->isEnabled($module['slug'])) {
+                $this->executeMigrations($module['slug'], $repository->location);
             } elseif ($this->option('force')) {
-                return $this->migrate($module['slug']);
-            } else {
-                return $this->error('Nothing to migrate.');
+                $this->executeMigrations($module['slug'], $repository->location);
             }
+
+            $this->error('Nothing to migrate.');
         } else {
-            if ($this->option('force')) {
-                $modules = $this->module->all();
-            } else {
-                $modules = $this->module->enabled();
-            }
+            $modules = $this->option('force')
+                ? $repository->all()
+                : $repository->enabled();
 
             foreach ($modules as $module) {
-                $this->migrate($module['slug']);
+                $this->executeMigrations($module['slug'], $repository->location);
             }
         }
     }
@@ -88,29 +98,21 @@ class ModuleMigrateCommand extends Command
      * Run migrations for the specified module.
      *
      * @param string $slug
+     * @param string $location
      *
      * @return mixed
      */
-    protected function migrate($slug)
+    protected function executeMigrations($slug, $location)
     {
-        if ($this->module->exists($slug)) {
-            $module = $this->module->where('slug', $slug);
+        if (modules($location)->exists($slug)) {
+            $module = modules($location)->where('slug', $slug);
             $pretend = Arr::get($this->option(), 'pretend', false);
             $step = Arr::get($this->option(), 'step', false);
             $path = $this->getMigrationPath($slug);
 
-            $this->migrator->run($path, ['pretend' => $pretend, 'step' => $step]);
+            $this->migrator->setOutput($this->output)->run($path, ['pretend' => $pretend, 'step' => $step]);
 
             event($slug.'.module.migrated', [$module, $this->option()]);
-
-            // Once the migrator has run we will grab the note output and send it out to
-            // the console screen, since the migrator itself functions without having
-            // any instances of the OutputInterface contract passed into the class.
-            foreach ($this->migrator->getNotes() as $note) {
-                if (!$this->option('quiet')) {
-                    $this->line($note);
-                }
-            }
 
             // Finally, if the "seed" option has been given, we will re-run the database
             // seed task to re-populate the database, which is convenient when adding
@@ -132,7 +134,7 @@ class ModuleMigrateCommand extends Command
      */
     protected function getMigrationPath($slug)
     {
-        return module_path($slug, 'Database/Migrations');
+        return module_path($slug, 'Database/Migrations', $this->option('location'));
     }
 
     /**
@@ -172,6 +174,7 @@ class ModuleMigrateCommand extends Command
             ['pretend', null, InputOption::VALUE_NONE, 'Dump the SQL queries that would be run.'],
             ['seed', null, InputOption::VALUE_NONE, 'Indicates if the seed task should be re-run.'],
             ['step', null, InputOption::VALUE_NONE, 'Force the migrations to be run so they can be rolled back individually.'],
+            ['location', null, InputOption::VALUE_OPTIONAL, 'Which modules location to use.'],
         ];
     }
 }

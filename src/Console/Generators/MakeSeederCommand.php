@@ -11,9 +11,10 @@ class MakeSeederCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'make:module:seeder
+    protected $signature = 'module:make:seeder
     	{slug : The slug of the module.}
-    	{name : The name of the seeder class.}';
+    	{name : The name of the seeder class.}
+    	{--location= : The modules location to create the module seeder class in}';
 
     /**
      * The console command description.
@@ -48,7 +49,7 @@ class MakeSeederCommand extends GeneratorCommand
      */
     protected function getPath($name)
     {
-        return module_path($this->argument('slug'), 'Database/Seeds/'.$name.'.php');
+        return module_path($this->argument('slug'), 'Database/Seeds/'.$name.'.php', $this->option('location'));
     }
 
     /**
@@ -58,7 +59,7 @@ class MakeSeederCommand extends GeneratorCommand
      *
      * @return string
      */
-    protected function parseName($name)
+    protected function qualifyClass($name)
     {
         return $name;
     }
@@ -72,6 +73,6 @@ class MakeSeederCommand extends GeneratorCommand
      */
     protected function getNamespace($name)
     {
-        return module_class($this->argument('slug'), 'Database\Seeds');
+        return module_class($this->argument('slug'), 'Database\Seeds', $this->option('location'));
     }
 }

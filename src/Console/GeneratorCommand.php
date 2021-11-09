@@ -15,19 +15,26 @@ abstract class GeneratorCommand extends LaravelGeneratorCommand
      *
      * @return string
      */
-    protected function parseName($name)
+    protected function qualifyClass($name)
     {
-        $rootNamespace = config('modules.namespace');
+        try {
+            $location = $this->option('location') ?: config('modules.default_location');
+        }
+        catch (\Exception $e) {
+            $location = config('modules.default_location');
+        }
+
+        $rootNamespace = config("modules.locations.$location.namespace");
 
         if (Str::startsWith($name, $rootNamespace)) {
             return $name;
         }
 
-        if (Str::contains($name, '/')) {
-            $name = str_replace('/', '\\', $name);
-        }
+        $name = str_replace('/', '\\', $name);
 
-        return $this->parseName($this->getDefaultNamespace(trim($rootNamespace, '\\')).'\\'.$name);
+        return $this->qualifyClass(
+            $this->getDefaultNamespace(trim($rootNamespace, '\\')).'\\'.$name
+        );
     }
 
     /**
@@ -39,16 +46,25 @@ abstract class GeneratorCommand extends LaravelGeneratorCommand
      */
     protected function getPath($name)
     {
+        try {
+            $location = $this->option('location') ?: config('modules.default_location');
+        }
+        catch (\Exception $e) {
+            $location = config('modules.default_location');
+        }
+
         $slug = $this->argument('slug');
+        $module = \pierresilva\Modules\Facades\Module::location($location)->where('slug', $slug);
 
         // take everything after the module name in the given path (ignoring case)
-        $key = array_search(strtolower($slug), explode('\\', strtolower($name)));
+        $key = array_search(strtolower($module['basename']), explode('\\', strtolower($name)));
+
         if ($key === false) {
             $newPath = str_replace('\\', '/', $name);
         } else {
             $newPath = implode('/', array_slice(explode('\\', $name), $key + 1));
         }
 
-        return module_path($slug, "$newPath.php");
+        return module_path($slug, "$newPath.php", $location);
     }
 }

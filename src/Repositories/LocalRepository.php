@@ -2,12 +2,14 @@
 
 namespace pierresilva\Modules\Repositories;
 
+use Illuminate\Support\Str;
+
 class LocalRepository extends Repository
 {
     /**
      * Get all modules.
      *
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     public function all()
     {
@@ -17,14 +19,14 @@ class LocalRepository extends Repository
     /**
      * Get all module slugs.
      *
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     public function slugs()
     {
         $slugs = collect();
 
         $this->all()->each(function ($item, $key) use ($slugs) {
-            $slugs->push($item['slug']);
+            $slugs->push(strtolower($item['slug']));
         });
 
         return $slugs;
@@ -36,7 +38,7 @@ class LocalRepository extends Repository
      * @param string $key
      * @param mixed  $value
      *
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     public function where($key, $value)
     {
@@ -48,7 +50,7 @@ class LocalRepository extends Repository
      *
      * @param string $key
      *
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     public function sortBy($key)
     {
@@ -62,7 +64,7 @@ class LocalRepository extends Repository
      *
      * @param string $key
      *
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     public function sortByDesc($key)
     {
@@ -80,7 +82,7 @@ class LocalRepository extends Repository
      */
     public function exists($slug)
     {
-        return $this->slugs()->contains(str_slug($slug));
+        return ($this->slugs()->contains($slug) || $this->slugs()->contains(Str::slug($slug)));
     }
 
     /**
@@ -143,7 +145,7 @@ class LocalRepository extends Repository
     /**
      * Get all enabled modules.
      *
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     public function enabled()
     {
@@ -153,7 +155,7 @@ class LocalRepository extends Repository
     /**
      * Get all disabled modules.
      *
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     public function disabled()
     {
@@ -212,6 +214,20 @@ class LocalRepository extends Repository
         return $this->set($slug.'::enabled', false);
     }
 
+    /**
+     * Get all modules by specified location
+     *
+     * @param string $location
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function byLocation($location)
+    {
+        $manifest = $this->getCachePath($location);
+
+        return collect(json_decode($this->files->get($manifest), true));
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Optimization Methods
@@ -228,13 +244,13 @@ class LocalRepository extends Repository
     {
         $cachePath = $this->getCachePath();
 
-        $cache = $this->getCache();
+        $cache     = $this->getCache();
         $basenames = $this->getAllBasenames();
-        $modules = collect();
+        $modules   = collect();
 
         $basenames->each(function ($module, $key) use ($modules, $cache) {
             $basename = collect(['basename' => $module]);
-            $temp = $basename->merge(collect($cache->get($module)));
+            $temp     = $basename->merge(collect($cache->get($module)));
             $manifest = $temp->merge(collect($this->getManifest($module)));
 
             $modules->put($module, $manifest);
@@ -244,7 +260,7 @@ class LocalRepository extends Repository
             $module->put('id', crc32($module->get('slug')));
 
             if (!$module->has('enabled')) {
-                $module->put('enabled', config('modules.enabled', true));
+                $module->put('enabled', config("modules.locations.$this->location.enabled", true));
             }
 
             if (!$module->has('order')) {
@@ -262,7 +278,7 @@ class LocalRepository extends Repository
     /**
      * Get the contents of the cache file.
      *
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     private function getCache()
     {
@@ -280,12 +296,12 @@ class LocalRepository extends Repository
     /**
      * Create an empty instance of the cache file.
      *
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     private function createCache()
     {
         $cachePath = $this->getCachePath();
-        $content = json_encode([], JSON_PRETTY_PRINT);
+        $content   = json_encode([], JSON_PRETTY_PRINT);
 
         $this->files->put($cachePath, $content);
 
@@ -297,8 +313,14 @@ class LocalRepository extends Repository
      *
      * @return string
      */
-    private function getCachePath()
+    private function getCachePath($location = null)
     {
-        return storage_path('app/modules.json');
+        if (!$this->files->isDirectory(storage_path("app/modules"))) {
+            $this->files->makeDirectory(storage_path("app/modules"));
+        }
+
+        $location = Str::slug($location ?? $this->location);
+
+        return storage_path("app/modules/$location.json");
     }
 }

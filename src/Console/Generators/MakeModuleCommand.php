@@ -2,9 +2,10 @@
 
 namespace pierresilva\Modules\Console\Generators;
 
-use pierresilva\Modules\Modules;
+use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use pierresilva\Modules\RepositoryManager;
 use Symfony\Component\Console\Helper\ProgressBar;
 
 class MakeModuleCommand extends Command
@@ -14,9 +15,10 @@ class MakeModuleCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'make:module
+    protected $signature = 'module:make
         {slug : The slug of the module}
-        {--Q|quick : Skip the make:module wizard and use default values}';
+        {--Q|quick : Skip the make:module wizard and use default values}
+        {--location= : The modules location.}';
 
     /**
      * The console command description.
@@ -28,7 +30,7 @@ class MakeModuleCommand extends Command
     /**
      * The modules instance.
      *
-     * @var Modules
+     * @var RepositoryManager
      */
     protected $module;
 
@@ -50,9 +52,9 @@ class MakeModuleCommand extends Command
      * Create a new command instance.
      *
      * @param Filesystem $files
-     * @param Modules    $module
+     * @param RepositoryManager $module
      */
-    public function __construct(Filesystem $files, Modules $module)
+    public function __construct(Filesystem $files, RepositoryManager $module)
     {
         parent::__construct();
 
@@ -65,16 +67,21 @@ class MakeModuleCommand extends Command
      *
      * @return mixed
      */
-    public function fire()
+    public function handle()
     {
-        $this->container['slug'] = str_slug($this->argument('slug'));
-        $this->container['name'] = studly_case($this->container['slug']);
-        $this->container['version'] = '1.0';
-        $this->container['description'] = 'This is the description for the '.$this->container['name'].' module.';
+        $location = $this->option('location');
+
+        $this->container['slug']        = Str::slug($this->argument('slug'));
+        $this->container['name']        = Str::studly($this->container['slug']);
+        $this->container['version']     = '1.0';
+        $this->container['description'] = 'This is the description for the ' . $this->container['name'] . ' module.';
+        $this->container['location']    = $location ?: config('modules.default_location');
+        $this->container['provider']    = config("modules.locations.{$this->container['location']}.provider");
 
         if ($this->option('quick')) {
-            $this->container['basename']    = studly_case($this->container['slug']);
-            $this->container['namespace']   = config('modules.namespace').$this->container['basename'];
+            $this->container['basename']  = Str::studly($this->container['slug']);
+            $this->container['namespace'] = config("modules.locations.{$this->container['location']}.namespace").$this->container['basename'];
+
             return $this->generate();
         }
 
@@ -84,48 +91,12 @@ class MakeModuleCommand extends Command
     }
 
     /**
-     * Step 1: Configure module manifest.
-     *
-     * @return mixed
-     */
-    private function stepOne()
-    {
-        $this->displayHeader('make_module_step_1');
-
-        $this->container['name'] = $this->ask('Please enter the name of the module:', $this->container['name']);
-        $this->container['slug'] = $this->ask('Please enter the slug for the module:', $this->container['slug']);
-        $this->container['version'] = $this->ask('Please enter the module version:', $this->container['version']);
-        $this->container['description'] = $this->ask('Please enter the description of the module:', $this->container['description']);
-        $this->container['basename'] = studly_case($this->container['slug']);
-        $this->container['namespace'] = config('modules.namespace').$this->container['basename'];
-
-        $this->comment('You have provided the following manifest information:');
-        $this->comment('Name:                       '.$this->container['name']);
-        $this->comment('Slug:                       '.$this->container['slug']);
-        $this->comment('Version:                    '.$this->container['version']);
-        $this->comment('Description:                '.$this->container['description']);
-        $this->comment('Basename (auto-generated):  '.$this->container['basename']);
-        $this->comment('Namespace (auto-generated): '.$this->container['namespace']);
-
-        if ($this->confirm('If the provided information is correct, type "yes" to generate.')) {
-            $this->comment('Thanks! That\'s all we need.');
-            $this->comment('Now relax while your module is generated.');
-
-            $this->generate();
-        } else {
-            return $this->stepOne();
-        }
-
-        return true;
-    }
-
-    /**
      * Generate the module.
      */
     protected function generate()
     {
         $steps = [
-            'Generating module...'       => 'generateModule',
+            'Generating module...' => 'generateModule',
             'Optimizing module cache...' => 'optimizeModules',
         ];
 
@@ -142,58 +113,9 @@ class MakeModuleCommand extends Command
 
         $progress->finish();
 
-        event($this->container['slug'].'.module.made');
+        event($this->container['slug'] . '.module.made');
 
         $this->info("\nModule generated successfully.");
-    }
-
-    /**
-     * Generate defined module folders.
-     */
-    protected function generateModule()
-    {
-        if (!$this->files->isDirectory(module_path())) {
-            $this->files->makeDirectory(module_path());
-        }
-
-        $pathMap = config('modules.pathMap');
-        $directory = module_path(null, $this->container['basename']);
-        $source = __DIR__.'/../../../resources/stubs/module';
-
-        $this->files->makeDirectory($directory);
-
-        $sourceFiles = $this->files->allFiles($source, true);
-
-        if (!empty($pathMap)) {
-            $search = array_keys($pathMap);
-            $replace = array_values($pathMap);
-        }
-
-        foreach ($sourceFiles as $file) {
-            $contents = $this->replacePlaceholders($file->getContents());
-            $subPath = $file->getRelativePathname();
-
-            if (!empty($pathMap)) {
-                $subPath = str_replace($search, $replace, $subPath);
-            }
-
-            $filePath = $directory.'/'.$subPath;
-            $dir = dirname($filePath);
-
-            if (!$this->files->isDirectory($dir)) {
-                $this->files->makeDirectory($dir, 0755, true);
-            }
-
-            $this->files->put($filePath, $contents);
-        }
-    }
-
-    /**
-     * Reset module cache of enabled and disabled modules.
-     */
-    protected function optimizeModules()
-    {
-        return $this->callSilent('module:optimize');
     }
 
     /**
@@ -206,13 +128,109 @@ class MakeModuleCommand extends Command
      */
     protected function displayHeader($file = '', $level = 'info')
     {
-        $stub = $this->files->get(__DIR__.'/../../../resources/stubs/console/'.$file.'.stub');
+        $stub = $this->files->get(__DIR__ . '/../../../resources/stubs/console/' . $file . '.stub');
 
         return $this->$level($stub);
     }
 
+    /**
+     * Step 1: Configure module manifest.
+     *
+     * @return mixed
+     */
+    protected function stepOne()
+    {
+        $this->displayHeader('make_module_step_1');
+
+        $this->container['name']        = $this->ask('Please enter the name of the module:', $this->container['name']);
+        $this->container['slug']        = $this->ask('Please enter the slug for the module:', $this->container['slug']);
+        $this->container['version']     = $this->ask('Please enter the module version:', $this->container['version']);
+        $this->container['description'] = $this->ask('Please enter the description of the module:', $this->container['description']);
+        $this->container['basename']    = Str::studly($this->container['slug']);
+        $this->container['namespace']   = config("modules.locations.{$this->container['location']}.namespace") . $this->container['basename'];
+
+        $this->comment('You have provided the following manifest information:');
+        $this->comment('Name:                       ' . $this->container['name']);
+        $this->comment('Slug:                       ' . $this->container['slug']);
+        $this->comment('Version:                    ' . $this->container['version']);
+        $this->comment('Description:                ' . $this->container['description']);
+        $this->comment('Basename (auto-generated):  ' . $this->container['basename']);
+        $this->comment('Namespace (auto-generated): ' . $this->container['namespace']);
+
+        if ($this->confirm('If the provided information is correct, type "yes" to generate.')) {
+            $this->comment('Thanks! That\'s all we need.');
+            $this->comment('Now relax while your module is generated.');
+
+            $this->generate();
+        } else {
+            return $this->stepOne();
+        }
+
+        return true;
+    }
+
+    /**
+     * Generate defined module folders.
+     */
+    protected function generateModule()
+    {
+        $location = $this->container['location'];
+        $root     = module_path(null, '', $location);
+        $manifest = config("modules.locations.$location.manifest") ?: 'module.json';
+        $provider = config("modules.locations.$location.provider") ?: 'ModuleServiceProvider';
+
+        if (!$this->files->isDirectory($root)) {
+            $this->files->makeDirectory($root);
+        }
+
+        $mapping   = config("modules.locations.$location.mapping");
+        $directory = module_path(null, $this->container['basename'], $location);
+        $source    = __DIR__ . '/../../../resources/stubs/module';
+
+        $this->files->makeDirectory($directory);
+
+        $sourceFiles = $this->files->allFiles($source, true);
+
+        if (!empty($mapping)) {
+            $search = array_keys($mapping);
+            $replace = array_values($mapping);
+        }
+
+        foreach ($sourceFiles as $file) {
+            $contents = $this->replacePlaceholders($file->getContents());
+            $subPath = $file->getRelativePathname();
+
+            if (!empty($mapping)) {
+                $subPath = str_replace($search, $replace, $subPath);
+            }
+
+            $filePath = $directory . '/' . $subPath;
+
+            // if the file is module.json, replace it with the custom manifest file name
+            if ($file->getFilename() === 'module.json' && $manifest) {
+                $filePath = str_replace('module.json', $manifest, $filePath);
+            }
+
+            // if the file is ModuleServiceProvider.php, replace it with the custom provider file name
+            if ($file->getFilename() === 'ModuleServiceProvider.php') {
+                $filePath = str_replace('ModuleServiceProvider', $provider, $filePath);
+            }
+
+            $dir = dirname($filePath);
+
+            if (! $this->files->isDirectory($dir)) {
+                $this->files->makeDirectory($dir, 0755, true);
+            }
+
+            $this->files->put($filePath, $contents);
+        }
+    }
+
     protected function replacePlaceholders($contents)
     {
+        $location = $this->container['location'];
+        $mapping  = config("modules.locations.$location.mapping");
+
         $find = [
             'DummyBasename',
             'DummyNamespace',
@@ -220,6 +238,19 @@ class MakeModuleCommand extends Command
             'DummySlug',
             'DummyVersion',
             'DummyDescription',
+            'DummyLocation',
+            'DummyProvider',
+
+            'ConfigMapping',
+            'DatabaseFactoriesMapping',
+            'DatabaseMigrationsMapping',
+            'DatabaseSeedsMapping',
+            'HttpControllersMapping',
+            'HttpMiddlewareMapping',
+            'ProvidersMapping',
+            'ResourcesLangMapping',
+            'ResourcesViewsMapping',
+            'RoutesMapping',
         ];
 
         $replace = [
@@ -229,8 +260,29 @@ class MakeModuleCommand extends Command
             $this->container['slug'],
             $this->container['version'],
             $this->container['description'],
+            $this->container['location'] ?? config('modules.default_location'),
+            $this->container['provider'],
+
+            $mapping['Config']              ?? 'Config',
+            $mapping['Database/Factories']  ?? 'Database/Factories',
+            $mapping['Database/Migrations'] ?? 'Database/Migrations',
+            $mapping['Database/Seeds']      ?? 'Database/Seeds',
+            $mapping['Http/Controllers']    ?? 'Http/Controllers',
+            $mapping['Http/Middleware']     ?? 'Http/Middleware',
+            $mapping['Providers']           ?? 'Providers',
+            $mapping['Resources/Lang']      ?? 'Resources/Lang',
+            $mapping['Resources/Views']     ?? 'Resources/Views',
+            $mapping['Routes']              ?? 'Routes'
         ];
 
         return str_replace($find, $replace, $contents);
+    }
+
+    /**
+     * Reset module cache of enabled and disabled modules.
+     */
+    protected function optimizeModules()
+    {
+        return $this->callSilent('module:optimize');
     }
 }

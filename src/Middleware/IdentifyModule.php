@@ -2,7 +2,7 @@
 
 namespace pierresilva\Modules\Middleware;
 
-use pierresilva\Modules\Modules;
+use pierresilva\Modules\RepositoryManager;
 use Closure;
 
 class IdentifyModule
@@ -15,9 +15,9 @@ class IdentifyModule
     /**
      * Create a new IdentifyModule instance.
      *
-     * @param pierreslva\Modules $module
+     * @param pierresilva\Modules $module
      */
-    public function __construct(Modules $module)
+    public function __construct(RepositoryManager $module)
     {
         $this->module = $module;
     }

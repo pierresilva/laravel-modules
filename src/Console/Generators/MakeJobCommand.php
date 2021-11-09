@@ -2,33 +2,33 @@
 
 namespace pierresilva\Modules\Console\Generators;
 
+
 use pierresilva\Modules\Console\GeneratorCommand;
 
-class MakeRequestCommand extends GeneratorCommand
+class MakeJobCommand extends GeneratorCommand
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'module:make:request
+    protected $signature = 'module:make:job
     	{slug : The slug of the module.}
-    	{name : The name of the form request class.}
-    	{--location= : The modules location to create the module form request class in}';
+    	{name : The name of the job class.}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new module form request class';
+    protected $description = 'Create a new module job class';
 
     /**
      * String to store the command type.
      *
      * @var string
      */
-    protected $type = 'Module request';
+    protected $type = 'Module job';
 
     /**
      * Get the stub file for the generator.
@@ -37,7 +37,7 @@ class MakeRequestCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return __DIR__.'/stubs/request.stub';
+        return __DIR__ . '/stubs/job.stub';
     }
 
     /**
@@ -49,6 +49,6 @@ class MakeRequestCommand extends GeneratorCommand
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return module_class($this->argument('slug'), 'Http\\Requests', $this->option('location'));
+        return module_class($this->argument('slug'), 'Jobs');
     }
 }

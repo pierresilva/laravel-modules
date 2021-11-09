@@ -4,7 +4,7 @@ namespace DummyNamespace\Providers;
 
 use pierresilva\Modules\Support\ServiceProvider;
 
-class ModuleServiceProvider extends ServiceProvider
+class DummyProvider extends ServiceProvider
 {
     /**
      * Bootstrap the module services.
@@ -13,9 +13,13 @@ class ModuleServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->loadTranslationsFrom(__DIR__.'/../Resources/Lang', 'DummySlug');
-        $this->loadViewsFrom(__DIR__.'/../Resources/Views', 'DummySlug');
-        $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations', 'DummySlug');
+        $this->loadTranslationsFrom(module_path('DummySlug', 'ResourcesLangMapping', 'DummyLocation'), 'DummySlug');
+        $this->loadViewsFrom(module_path('DummySlug', 'ResourcesViewsMapping', 'DummyLocation'), 'DummySlug');
+        $this->loadMigrationsFrom(module_path('DummySlug', 'DatabaseMigrationsMapping', 'DummyLocation'));
+        if(!$this->app->configurationIsCached()) {
+            $this->loadConfigsFrom(module_path('DummySlug', 'ConfigMapping', 'DummyLocation'));
+        }
+        $this->loadFactoriesFrom(module_path('DummySlug', 'DatabaseFactoriesMapping', 'DummyLocation'));
     }
 
     /**

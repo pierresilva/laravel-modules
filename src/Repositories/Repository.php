@@ -2,12 +2,19 @@
 
 namespace pierresilva\Modules\Repositories;
 
+use Exception;
+use Illuminate\Support\Str;
 use pierresilva\Modules\Contracts\Repository as RepositoryContract;
 use Illuminate\Config\Repository as Config;
 use Illuminate\Filesystem\Filesystem;
 
 abstract class Repository implements RepositoryContract
 {
+    /**
+     * @var string
+     */
+    public $location;
+
     /**
      * @var \Illuminate\Config\Repository
      */
@@ -26,11 +33,13 @@ abstract class Repository implements RepositoryContract
     /**
      * Constructor method.
      *
+     * @param string                            $location
      * @param \Illuminate\Config\Repository     $config
      * @param \Illuminate\Filesystem\Filesystem $files
      */
-    public function __construct(Config $config, Filesystem $files)
+    public function __construct(string $location, Config $config, Filesystem $files)
     {
+        $this->location = $location;
         $this->config = $config;
         $this->files = $files;
     }
@@ -66,12 +75,18 @@ abstract class Repository implements RepositoryContract
      */
     public function getManifest($slug)
     {
-        if (!is_null($slug)) {
-            $path = $this->getManifestPath($slug);
+        if (! is_null($slug)) {
+            $path     = $this->getManifestPath($slug);
             $contents = $this->files->get($path);
-            $collection = collect(json_decode($contents, true));
+            $validate = @json_decode($contents, true);
 
-            return $collection;
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $collection = collect(json_decode($contents, true));
+
+                return $collection;
+            }
+
+            throw new Exception('['.$slug.'] Your JSON manifest file was not properly formatted. Check for formatting issues and try again.');
         }
     }
 
@@ -82,7 +97,7 @@ abstract class Repository implements RepositoryContract
      */
     public function getPath()
     {
-        return $this->path ?: $this->config->get('modules.path');
+        return $this->path ?: $this->config->get("modules.locations.$this->location.path");
     }
 
     /**
@@ -108,7 +123,7 @@ abstract class Repository implements RepositoryContract
      */
     public function getModulePath($slug)
     {
-        $module = studly_case(str_slug($slug));
+        $module = Str::studly($slug);
 
         if (\File::exists($this->getPath()."/{$module}/")) {
             return $this->getPath()."/{$module}/";
@@ -126,7 +141,9 @@ abstract class Repository implements RepositoryContract
      */
     protected function getManifestPath($slug)
     {
-        return $this->getModulePath($slug).'module.json';
+        $filename = config("modules.locations.$this->location.manifest") ?: 'module.json';
+
+        return $this->getModulePath($slug).$filename;
     }
 
     /**
@@ -136,6 +153,6 @@ abstract class Repository implements RepositoryContract
      */
     public function getNamespace()
     {
-        return rtrim($this->config->get('modules.namespace'), '/\\');
+        return rtrim($this->config->get("modules.locations.$this->location.namespace"), '/\\');
     }
 }

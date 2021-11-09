@@ -34,7 +34,7 @@ laravel-project/
     app/
     |-- Modules/
         |-- Blog/
-            |-- Console/
+            |-- Config/
             |-- Database/
                 |-- Factories/
                 |-- Migrations/
@@ -53,6 +53,7 @@ laravel-project/
             |-- Routes/
                 |-- api.php/
                 |-- web.php/
+            |-- Tests/
             |-- module.json
 ```
 
@@ -354,26 +355,52 @@ if (Module::isDisabled('blog')) {
 Artisan Commands
 ----------------
 Modules package comes with a handful of Artisan commands to make generating and managing modules easy.
-#### make:module [slug]
+
+#### module:make [slug]
 Generate a new module. This will generate all the necessary folders and files needed to bootstrap your new module. The new module will be automatically enabled and work out of the box.
 ```
-php artisan make:module blog
+php artisan module:make blog
 ```
-#### make:module:controller [slug] [ControllerName]
+
+#### module:make:controller [slug] [ControllerName]
 Generate a new module controller class.
 ```
-php artisan make:module:controller blog PostsController
+php artisan module:make:controller blog PostsController
 ```
-#### make:module:migration [slug] [migration_name]
+
+#### module:make:migration [slug] [migration_name]
 Generate a new module migration file.
 ```
-php artisan make:module:migration blog create_posts_table
+php artisan module:make:migration blog create_posts_table
 ```
-#### make:module:request [slug] [RequestName]
+
+#### module:make:seeder [slug] [SeederName]
+Generate a new module seeder file.
+```
+php artisan module:make:seeder blog PostsTableSeeder
+```
+
+For migrate entry blog seders create a `[ModuleName]DatabaseSeeder` class into `Database\Seeders` folder module, and include your generate Sedder classes in `run()` method. 
+
+#### module:make:request [slug] [RequestName]
 Create a new module form request class.
 ```
 php artisan make:module:request blog CreatePostRequest
 ```
+#### module:make:test [slug] [TestName]
+Create a new module test class.
+```
+php artisan make:module:test blog PostsTest
+```
+and add in `<testsuites></testsuites>` tag in `phpunit.xml` file the following snippet:
+```
+<testsuite name="BlogModule">
+    <directory suffix="Test.php">./app/Modules/Blog/Tests</directory>
+</testsuite>
+```
+
+After that the `php artisan test` command can find the module tests classes.
+
 #### module:enable [slug]
 Enable a module.
 ```
@@ -460,4 +487,4 @@ php artisan module:seed blog
 
 #### Author
 
-[Pierre Silva](http://www.lab3studio.com)
+[Pierre Silva](https://appscenter.dev)

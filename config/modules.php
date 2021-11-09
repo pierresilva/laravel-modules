@@ -4,71 +4,80 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Path to Modules
+    | Default Location
     |--------------------------------------------------------------------------
     |
-    | Define the path where you'd like to store your modules. Note that if you
-    | choose a path that's outside of your public directory, you will need to
-    | copy your module assets (CSS, images, etc.) to your public directory.
+    | This option controls the default module location that gets used while
+    | using this package. This location is used when another is not explicitly
+    | specified when exucuting a given module function or command.
     |
     */
 
-    'path' => base_path('Modules'),
+    'default_location' => 'app',
 
     /*
     |--------------------------------------------------------------------------
-    | Modules Default State
+    | Locations
     |--------------------------------------------------------------------------
     |
-    | When a previously unknown module is added, if it doesn't have an 'enabled'
-    | state set then this is the value which it will default to. If this is
-    | not provided then the module will default to being 'enabled'.
+    | Here you may define all of the module locations for your application as
+    | well as their drivers and other configuration options. This gives you
+    | the flexibility to structure modules as you see fit in each location.
     |
     */
 
-    'enabled' => true,
+    'locations' => [
+        'app' => [
+            'driver' => 'local',
+            'path' => app_path('Modules'),
+            'namespace' => 'App\\Modules\\',
+            'enabled' => true,
+            'provider' => 'ModuleServiceProvider',
+            'manifest' => 'module.json',
+            'mapping' => [
+
+                // Here you may configure the class mapping, effectively
+                // customizing your generated default module structure.
+
+                'Config' => 'Config',
+                'Database/Factories' => 'Database/Factories',
+                'Database/Migrations' => 'Database/Migrations',
+                'Database/Seeds' => 'Database/Seeds',
+                'Http/Controllers' => 'Http/Controllers',
+                'Http/Middleware' => 'Http/Middleware',
+                'Providers' => 'Providers',
+                'Resources/Lang' => 'Resources/Lang',
+                'Resources/Views' => 'Resources/Views',
+                'Routes' => 'Routes'
+            ],
+        ],
+    ],
 
     /*
     |--------------------------------------------------------------------------
-    | Modules Base Namespace
+    | Default Driver
     |--------------------------------------------------------------------------
     |
-    | Define the base namespace for your modules. Be sure to update this value
-    | if you move your modules directory to a new path. This is primarily used
-    | by the module:make Artisan command.
+    | Here you may specify the default module storage driver that should be
+    | used by the package. A "local" driver is available out of the box that
+    | uses the local filesystem to store and maintain module manifests.
     |
     */
 
-    'namespace' => 'App\Modules\\',
+    'default_driver' => 'local',
 
     /*
-    |--------------------------------------------------------------------------
-    | Default Module Driver
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the module storage driver that will be utilized.
-    | This driver manages the retrieval and management of module properties.
-    | Setting this to custom allows you to specify your own driver instance.
-    |
-    | Supported: "local"
-    |
-    */
+     |--------------------------------------------------------------------------
+     | Drivers
+     |--------------------------------------------------------------------------
+     |
+     | Here you may configure as many module drivers as you wish. Use the
+     | local driver class as a basis for creating your own. The possibilities
+     | are endless!
+     |
+     */
 
-    'driver' => 'local',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Remap Module Subdirectories
-    |--------------------------------------------------------------------------
-    |
-    | Redefine how module directories are structured. The mapping here will
-    | be respected by all commands and generators.
-    |
-    */
-
-    'pathMap' => [
-        // To change where migrations go, specify the default
-        // location as the key and the new location as the value:
-        // 'Database/Migrations' => 'src/Database/Migrations',
+    'drivers' => [
+        'local' => 'pierresilva\Modules\Repositories\LocalRepository',
     ],
 ];

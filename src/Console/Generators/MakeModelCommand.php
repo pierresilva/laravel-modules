@@ -2,8 +2,8 @@
 
 namespace pierresilva\Modules\Console\Generators;
 
-use pierresilva\Modules\Console\GeneratorCommand;
 use Illuminate\Support\Str;
+use pierresilva\Modules\Console\GeneratorCommand;
 
 class MakeModelCommand extends GeneratorCommand
 {
@@ -12,10 +12,11 @@ class MakeModelCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'make:module:model
+    protected $signature = 'module:make:model
     	{slug : The slug of the module.}
     	{name : The name of the model class.}
-        {--migration : Create a new migration file for the model.}';
+        {--migration : Create a new migration file for the model.}
+    	{--location= : The modules location to create the module model class in}';
 
     /**
      * The console command description.
@@ -36,16 +37,17 @@ class MakeModelCommand extends GeneratorCommand
      *
      * @return void
      */
-    public function fire()
+    public function handle()
     {
-        if (parent::fire() !== false) {
+        if (parent::handle() !== false) {
             if ($this->option('migration')) {
                 $table = Str::plural(Str::snake(class_basename($this->argument('name'))));
 
-                $this->call('make:module:migration', [
-                    'slug'     => $this->argument('slug'),
-                    'name'     => "create_{$table}_table",
+                $this->call('module:make:migration', [
+                    'slug' => $this->argument('slug'),
+                    'name' => "create_{$table}_table",
                     '--create' => $table,
+                    '--location' => $this->option('location'),
                 ]);
             }
         }
@@ -58,7 +60,7 @@ class MakeModelCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return __DIR__.'/stubs/model.stub';
+        return __DIR__ . '/stubs/model.stub';
     }
 
     /**

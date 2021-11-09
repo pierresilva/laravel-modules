@@ -2,6 +2,7 @@
 
 namespace pierresilva\Modules\Console\Generators;
 
+use Symfony\Component\Console\Input\InputOption;
 use pierresilva\Modules\Console\GeneratorCommand;
 
 class MakeControllerCommand extends GeneratorCommand
@@ -11,10 +12,11 @@ class MakeControllerCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'make:module:controller
+    protected $signature = 'module:make:controller
     	{slug : The slug of the module}
     	{name : The name of the controller class}
-    	{--resource : Generate a module resource controller class}';
+    	{--resource : Generate a module resource controller class}
+    	{--location= : The modules location to create the module controller class in}';
 
     /**
      * The console command description.
@@ -38,21 +40,21 @@ class MakeControllerCommand extends GeneratorCommand
     protected function getStub()
     {
         if ($this->option('resource')) {
-            return __DIR__.'/stubs/controller.resource.stub';
+            return __DIR__ . '/stubs/controller.resource.stub';
         }
 
-        return __DIR__.'/stubs/controller.stub';
+        return __DIR__ . '/stubs/controller.stub';
     }
 
     /**
      * Get the default namespace for the class.
      *
      * @param string $rootNamespace
-     *
      * @return string
+     * @throws \pierresilva\Modules\Exceptions\ModuleNotFoundException
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return module_class($this->argument('slug'), 'Http\\Controllers');
+        return module_class($this->argument('slug'), 'Http\\Controllers', $this->option('location'));
     }
 }
