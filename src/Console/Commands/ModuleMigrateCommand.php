@@ -118,7 +118,7 @@ class ModuleMigrateCommand extends Command
             // seed task to re-populate the database, which is convenient when adding
             // a migration and a seed at the same time, as it is only this command.
             if ($this->option('seed')) {
-                $this->call('module:seed', ['module' => $slug, '--force' => true]);
+                $this->call('module:seed', ['slug' => $slug, '--force' => true]);
             }
         } else {
             return $this->error('Module does not exist.');
