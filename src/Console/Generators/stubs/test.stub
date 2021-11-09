@@ -7,4 +7,9 @@ use Tests\TestCase;
 class DummyClass extends TestCase
 {
     //
+
+    public function test_case_1 ()
+    {
+        return assert(true);
+    }
 }
