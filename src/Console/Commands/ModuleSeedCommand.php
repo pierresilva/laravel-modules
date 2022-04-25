@@ -93,7 +93,7 @@ class ModuleSeedCommand extends Command
         $module        = $repository->where('slug', $slug);
         $params        = [];
         $namespacePath = $repository->getNamespace();
-        $rootSeeder    = $module['basename'].'DatabaseSeeder';
+        $rootSeeder    = 'ModuleDatabaseSeeder';
         $fullPath      = $namespacePath.'\\'.$module['basename'].'\Database\Seeds\\'.$rootSeeder;
 
         if (class_exists($fullPath)) {
