@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +14,23 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::get('/DummySlug', function (Request $request) {
-    // return $request->DummySlug();
-})->middleware('auth:api');
+# custom routes section
+
+Route::group([
+    'prefix' => 'DummySlug',
+    'middleware' => 'api'
+], function () {
+    Route::get('/', function () {
+        return response()->json([
+            'message' => 'This is the DummyName module API index page. Build something great!'
+        ]);
+    });
+
+    // Route::get('/apps', 'Api\\DummyNameController@index');
+});
+
+# end custom routes section
+
+# generated section
+
+# end generated section

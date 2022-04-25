@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -11,8 +13,21 @@
 |
 */
 
-Route::group(['prefix' => 'DummySlug'], function () {
+# custom routes section
+
+Route::group([
+    'prefix' => 'DummySlug',
+    'middleware' => 'web'
+], function () {
     Route::get('/', function () {
-        dd('This is the DummyName module index page. Build something great!');
+        dd('This is the DummyName module WEB index page. Build something great!');
     });
+
+    // Route::get('/apps', 'DummyNameController@index');
 });
+
+# end custom routes section
+
+# generated section
+
+# end generated section
