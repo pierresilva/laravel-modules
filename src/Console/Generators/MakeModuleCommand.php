@@ -2,6 +2,7 @@
 
 namespace pierresilva\Modules\Console\Generators;
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
@@ -71,16 +72,16 @@ class MakeModuleCommand extends Command
     {
         $location = $this->option('location');
 
-        $this->container['slug']        = Str::slug($this->argument('slug'));
-        $this->container['name']        = Str::studly($this->container['slug']);
-        $this->container['version']     = '1.0';
+        $this->container['slug'] = Str::slug($this->argument('slug'));
+        $this->container['name'] = Str::studly($this->container['slug']);
+        $this->container['version'] = '1.0';
         $this->container['description'] = 'This is the description for the ' . $this->container['name'] . ' module.';
-        $this->container['location']    = $location ?: config('modules.default_location');
-        $this->container['provider']    = config("modules.locations.{$this->container['location']}.provider");
+        $this->container['location'] = $location ?: config('modules.default_location');
+        $this->container['provider'] = config("modules.locations.{$this->container['location']}.provider");
 
         if ($this->option('quick')) {
-            $this->container['basename']  = Str::studly($this->container['slug']);
-            $this->container['namespace'] = config("modules.locations.{$this->container['location']}.namespace").$this->container['basename'];
+            $this->container['basename'] = Str::studly($this->container['slug']);
+            $this->container['namespace'] = config("modules.locations.{$this->container['location']}.namespace") . $this->container['basename'];
 
             return $this->generate();
         }
@@ -110,6 +111,8 @@ class MakeModuleCommand extends Command
 
             $progress->advance();
         }
+
+        $this->addTestSuite();
 
         $progress->finish();
 
@@ -142,12 +145,12 @@ class MakeModuleCommand extends Command
     {
         $this->displayHeader('make_module_step_1');
 
-        $this->container['name']        = $this->ask('Please enter the name of the module:', $this->container['name']);
-        $this->container['slug']        = $this->ask('Please enter the slug for the module:', $this->container['slug']);
-        $this->container['version']     = $this->ask('Please enter the module version:', $this->container['version']);
+        $this->container['name'] = $this->ask('Please enter the name of the module:', $this->container['name']);
+        $this->container['slug'] = $this->ask('Please enter the slug for the module:', $this->container['slug']);
+        $this->container['version'] = $this->ask('Please enter the module version:', $this->container['version']);
         $this->container['description'] = $this->ask('Please enter the description of the module:', $this->container['description']);
-        $this->container['basename']    = Str::studly($this->container['slug']);
-        $this->container['namespace']   = config("modules.locations.{$this->container['location']}.namespace") . $this->container['basename'];
+        $this->container['basename'] = Str::studly($this->container['slug']);
+        $this->container['namespace'] = config("modules.locations.{$this->container['location']}.namespace") . $this->container['basename'];
 
         $this->comment('You have provided the following manifest information:');
         $this->comment('Name:                       ' . $this->container['name']);
@@ -160,7 +163,6 @@ class MakeModuleCommand extends Command
         if ($this->confirm('If the provided information is correct, type "yes" to generate.')) {
             $this->comment('Thanks! That\'s all we need.');
             $this->comment('Now relax while your module is generated.');
-
             $this->generate();
         } else {
             return $this->stepOne();
@@ -175,7 +177,7 @@ class MakeModuleCommand extends Command
     protected function generateModule()
     {
         $location = $this->container['location'];
-        $root     = module_path(null, '', $location);
+        $root = module_path(null, '', $location);
         $manifest = config("modules.locations.$location.manifest") ?: 'module.json';
         $provider = config("modules.locations.$location.provider") ?: 'ModuleServiceProvider';
 
@@ -183,9 +185,9 @@ class MakeModuleCommand extends Command
             $this->files->makeDirectory($root);
         }
 
-        $mapping   = config("modules.locations.$location.mapping");
+        $mapping = config("modules.locations.$location.mapping");
         $directory = module_path(null, $this->container['basename'], $location);
-        $source    = __DIR__ . '/../../../resources/stubs/module';
+        $source = __DIR__ . '/../../../resources/stubs/module';
 
         $this->files->makeDirectory($directory);
 
@@ -218,7 +220,7 @@ class MakeModuleCommand extends Command
 
             $dir = dirname($filePath);
 
-            if (! $this->files->isDirectory($dir)) {
+            if (!$this->files->isDirectory($dir)) {
                 $this->files->makeDirectory($dir, 0755, true);
             }
 
@@ -229,7 +231,7 @@ class MakeModuleCommand extends Command
     protected function replacePlaceholders($contents)
     {
         $location = $this->container['location'];
-        $mapping  = config("modules.locations.$location.mapping");
+        $mapping = config("modules.locations.$location.mapping");
 
         $find = [
             'DummyBasename',
@@ -263,19 +265,43 @@ class MakeModuleCommand extends Command
             $this->container['location'] ?? config('modules.default_location'),
             $this->container['provider'],
 
-            $mapping['Config']              ?? 'Config',
-            $mapping['Database/Factories']  ?? 'Database/Factories',
+            $mapping['Config'] ?? 'Config',
+            $mapping['Database/Factories'] ?? 'Database/Factories',
             $mapping['Database/Migrations'] ?? 'Database/Migrations',
-            $mapping['Database/Seeds']      ?? 'Database/Seeds',
-            $mapping['Http/Controllers']    ?? 'Http/Controllers',
-            $mapping['Http/Middleware']     ?? 'Http/Middleware',
-            $mapping['Providers']           ?? 'Providers',
-            $mapping['Resources/Lang']      ?? 'Resources/Lang',
-            $mapping['Resources/Views']     ?? 'Resources/Views',
-            $mapping['Routes']              ?? 'Routes'
+            $mapping['Database/Seeds'] ?? 'Database/Seeds',
+            $mapping['Http/Controllers'] ?? 'Http/Controllers',
+            $mapping['Http/Middleware'] ?? 'Http/Middleware',
+            $mapping['Providers'] ?? 'Providers',
+            $mapping['Resources/Lang'] ?? 'Resources/Lang',
+            $mapping['Resources/Views'] ?? 'Resources/Views',
+            $mapping['Routes'] ?? 'Routes'
         ];
 
         return str_replace($find, $replace, $contents);
+    }
+
+    /**
+     * @return void
+     */
+    private function addTestSuite()
+    {
+        $location = $this->container['location'] ?? config('modules.default_location');
+        $replace_pattern = '#(<testsuites>)(.*?)(</testsuites>)#s';
+        $textToAdd = '<testsuite name="'.$this->container['name'].'Feature">
+            <directory suffix="Test.php">./'.$location.'/Modules/'.$this->container['name'].'/Tests/Feature</directory>
+        </testsuite>
+        <testsuite name="'.$this->container['name'].'Unit">
+            <directory suffix="Test.php">./'.$location.'/Modules/'.$this->container['name'].'/Tests/Unit</directory>
+        </testsuite>';
+
+        $source = File::get(base_path('phpunit.xml'));
+
+        $output = preg_replace($replace_pattern, "$1\n$2\t" . $textToAdd . "\n\t$3", $source);
+
+        // dd($output);
+
+        File::put(base_path('phpunit.xml'), $output);
+
     }
 
     /**

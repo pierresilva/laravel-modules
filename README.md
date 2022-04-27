@@ -385,20 +385,17 @@ For migrate entry blog seders create a `[ModuleName]DatabaseSeeder` class into `
 #### module:make:request [slug] [RequestName]
 Create a new module form request class.
 ```
-php artisan make:module:request blog CreatePostRequest
+php artisan module:make:request blog CreatePostRequest
 ```
-#### module:make:test [slug] [TestName]
-Create a new module test class.
+#### module:make:test [slug] [TestName] [--unit]
+Create a new module feature test class.
 ```
-php artisan make:module:test blog PostsTest
+php artisan module:make:test blog PostsTest
 ```
-and add in `<testsuites></testsuites>` tag in `phpunit.xml` file the following snippet:
+Create a new module unit test class.
 ```
-<testsuite name="BlogModule">
-    <directory suffix="Test.php">./app/Modules/Blog/Tests</directory>
-</testsuite>
+php artisan module:make:test blog PostsTest --unit
 ```
-
 After that the `php artisan test` command can find the module tests classes.
 
 #### module:enable [slug]

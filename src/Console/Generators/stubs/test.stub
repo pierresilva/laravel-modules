@@ -8,8 +8,8 @@ class DummyClass extends TestCase
 {
     //
 
-    public function test_case_1 ()
+    public function testDummyClassCaseOne ()
     {
-        return assert(true);
+        return $this->assertTrue(true);
     }
 }

@@ -29,6 +29,7 @@ class ConsoleServiceProvider extends ServiceProvider
         $this->registerMigrateRollbackCommand();
         $this->registerOptimizeCommand();
         $this->registerSeedCommand();
+        $this->registerTestCommand();
     }
 
     /**
@@ -142,5 +143,17 @@ class ConsoleServiceProvider extends ServiceProvider
         });
 
         $this->commands('command.module.seed');
+    }
+
+    /**
+     * Register the module:test command.
+     */
+    protected function registerTestCommand()
+    {
+        $this->app->singleton('command.module.test', function ($app) {
+            return new \pierresilva\Modules\Console\Commands\ModuleTestCommand($app['modules']);
+        });
+
+        $this->commands('command.module.test');
     }
 }

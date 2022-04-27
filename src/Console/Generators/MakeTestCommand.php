@@ -14,6 +14,7 @@ class MakeTestCommand extends GeneratorCommand
     protected $signature = 'module:make:test
     	{slug : The slug of the module}
     	{name : The name of the test class}
+    	{--unit : The test type will be unit}
     	{--location= : The modules location to create the test class in}';
 
     /**
@@ -49,6 +50,6 @@ class MakeTestCommand extends GeneratorCommand
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return module_class($this->argument('slug'), 'Tests', $this->option('location'));
+        return module_class($this->argument('slug'), $this->option('unit') ? 'Tests\Unit' : 'Tests\Feature', $this->option('location'));
     }
 }
