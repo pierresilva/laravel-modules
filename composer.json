@@ -10,8 +10,8 @@
         }
     ],
     "require": {
-        "php": "^7.2|^8.0",
-        "illuminate/support": "^6.0|^7.0|^8.0",
+        "php": "^7.2|^8.0|^8.1",
+        "illuminate/support": "^6.0|^7.0|^8.0|^9.0",
         "laravel/legacy-factories": "^1.1"
     },
     "autoload": {
@@ -31,7 +31,7 @@
                 "pierresilva\\Modules\\ModulesServiceProvider"
             ],
             "aliases": {
-                "Module": "Pierresilva\\Modules\\Facades\\Module"
+                "Module": "pierresilva\\Modules\\Facades\\Module"
             }
         }
     }
